@@ -1,1 +1,1 @@
-# test
+# plenty-plugin-lenando
