@@ -541,9 +541,6 @@ class lenandoHelper
 
 		return '';
 	}
-	
-	
-
 
     /**
      * Get shipping cost.
@@ -640,7 +637,7 @@ class lenandoHelper
      */
     public function getAttributeName(Record $item, KeyValue $settings):string
     {
-        $values = [];
+        $values = '';
 
         if($item->variationBase->attributeValueSetId)
         {
@@ -650,13 +647,21 @@ class lenandoHelper
 
                 if($attributeName instanceof AttributeName)
                 {
-                    $values[] = $attributeName->name;
+                    $values .= $attributeName->name . ': ';
+                }
+                
+                
+              	$attributeValueName = $this->attributeValueNameRepository->findOne($attribute->attributeValueId, $settings->get('lang') ? $settings->get('lang') : 'de');
+
+                if($attributeValueName instanceof AttributeValueName)
+                {
+                    $values .= $attributeValueName->name. ' ';
                 }
 
             }
         }
 
-        return implode('|', $values);
+        return $values;
     }
 
     /**
@@ -855,13 +860,13 @@ class lenandoHelper
      */
     public function getItemCharacterByBackendName(Record $item, KeyValue $settings, string $backendName):string
     {
-        foreach($item->itemCharacterList as $itemCharacter)
+        foreach($item->itemPropertyList as $itemProperty)
         {
-            $propertyItemName = $this->propertyItemNameRepository->findOne($itemCharacter->itemCharacterId, $settings->get('lang')? $settings->get('lang') : 'de');
+            $propertyItemName = $this->propertyItemNameRepository->findOne($itemProperty->itemPropertyId, $settings->get('lang')? $settings->get('lang') : 'de');
 
             if($propertyItemName->name == $backendName)
             {
-                return (string) $itemCharacter->characterValue;
+                return (string) $itemProperty->propertyValue;
             }
         }
 
@@ -877,23 +882,23 @@ class lenandoHelper
      */
     public function getItemCharactersByComponent(Record $item, float $marketId, ?int $componentId = null):Vector<array<string,mixed>>
     {
-        $characterList = $item->itemCharacterList;
+        $propertyList = $item->itemPropertyList;
 
         $propertyMarketComponents = $this->propertyMarketComponentRepository->getPropertyMarketComponents($marketId, !is_null($componentId) ? $componentId : null);
 
         $list = Vector{};
 
-        foreach($characterList as $character)
+        foreach($propertyList as $property)
 		{
             foreach($propertyMarketComponents as $propertyMarketComponent)
             {
-                if($propertyMarketComponent instanceof PropertyMarketComponent && $propertyMarketComponent->propertyItemId == $character->characterId)
+                if($propertyMarketComponent instanceof PropertyMarketComponent && $propertyMarketComponent->propertyItemId == $property->propertyId)
                 {
                     $list[] = [
-                        'itemCharacterId' => $character->itemCharacterId,
-                        'characterId' => $character->characterId,
-                        'characterValue' => $character->characterValue,
-                        'characterValueType' => $character->characterValueType,
+                        'itemCharacterId' => $property->itemPropertyId,
+                        'characterId' => $property->propertyId,
+                        'characterValue' => $property->propertyValue,
+                        'characterValueType' => $property->propertyValueType,
                         'characterItemId' => $propertyMarketComponent->propertyItemId,
                         'componentId' => $propertyMarketComponent->componentId,
                         'referrerId' => $propertyMarketComponent->marketReference,
@@ -1057,7 +1062,7 @@ class lenandoHelper
 
         if($webstore instanceof Webstore)
         {
-            $webstoreId = $webstore->plenty_webstore_id;
+            $webstoreId = $webstore->id;
             return $webstoreId;
         }
         return 0;
