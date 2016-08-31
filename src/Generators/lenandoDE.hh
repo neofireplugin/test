@@ -18,7 +18,7 @@ class lenandoDE extends CSVGenerator
 	/*
 	 * @var lenandoHelper
 	 */
-	private lenandoHelper $elasticExportHelper;
+	private lenandoHelper $lenandoHelper;
 
 	/*
 	 * @var ArrayHelper
@@ -27,12 +27,12 @@ class lenandoDE extends CSVGenerator
 
 	/**
 	 * lenando constructor.
-	 * @param lenandoHelper $elasticExportHelper
+	 * @param lenandoHelper $lenandoHelper
 	 * @param ArrayHelper $arrayHelper
 	 */
-	public function __construct(lenandoHelper $elasticExportHelper, ArrayHelper $arrayHelper)
+	public function __construct(lenandoHelper $lenandoHelper, ArrayHelper $arrayHelper)
 	{
-		$this->elasticExportHelper = $elasticExportHelper;
+		$this->lenandoHelper = $lenandoHelper;
 		$this->arrayHelper = $arrayHelper;
 	}
 
@@ -132,58 +132,10 @@ class lenandoDE extends CSVGenerator
             $attributeName = array();
             foreach($resultData as $item)
             {
-                $attributeName[$item->itemBase->id] = $this->elasticExportHelper->getAttributeName($item, $settings);
+                $attributeName[$item->itemBase->id] = $this->lenandoHelper->getAttributeName($item, $settings);
             }
 
-			foreach($resultData as $item)
-			{
-				$currentItemId = $item->itemBase->id;
-                $attributeValue = $this->elasticExportHelper->getAttributeValueSetShortFrontendName($item, $settings, '|');
-
-                /**
-                 * Case of an item with more variation
-                 */
-                if ($previousItemId != $currentItemId && $item->itemBase->variationCount > 1)
-				{
-                    /**
-                     * The item has multiple active variations with attributes
-                     */
-                    if(strlen($attributeName[$item->itemBase->id]) > 0)
-                    {
-                        $this->buildParentWithChildrenRow($item, $settings, $attributeName);
-                    }
-                    /**
-                     * The item has only inactive variations
-                     */
-                    else
-                    {
-                        $this->buildParentWithoutChildrenRow($item, $settings);
-                    }
-                    /**
-                     * This will only be triggered if the main variation also has a attribute value
-                     */
-					if(strlen($attributeValue) > 0)
-					{
-						$this->buildChildRow($item, $settings, $attributeValue);
-					}
-					$previousItemId = $currentItemId;
-				}
-                /**
-                 * Case item has only the main variation
-                 */
-				elseif($previousItemId != $currentItemId && $item->itemBase->variationCount == 1 && $item->itemBase->hasAttribute == false)
-				{
-					$this->buildParentWithoutChildrenRow($item, $settings);
-					$previousItemId = $currentItemId;
-				}
-                /**
-                 * The parent is already in the csv
-                 */
-				elseif(strlen($attributeValue) > 0)
-				{
-					$this->buildChildRow($item, $settings, $attributeValue);
-				}
-			}
+			
 		}
 	}
 
@@ -254,8 +206,8 @@ class lenandoDE extends CSVGenerator
 			$vat = 19;
 		}
 
-		$rrp = $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) > $this->elasticExportHelper->getPrice($item) ? $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) : $this->elasticExportHelper->getPrice($item);
-		$price = $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) > $this->elasticExportHelper->getPrice($item) ? $this->elasticExportHelper->getPrice($item) : $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings);
+		$rrp = $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) > $this->lenandoHelper->getPrice($item) ? $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) : $this->lenandoHelper->getPrice($item);
+		$price = $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) > $this->lenandoHelper->getPrice($item) ? $this->lenandoHelper->getPrice($item) : $this->lenandoHelper->getRecommendedRetailPrice($item, $settings);
 		$price = $price > 0 ? $price : '';
 		$unit = $this->getUnit($item, $settings);
 		$basePriceContent = (int)$item->variationBase->content;
@@ -266,20 +218,20 @@ class lenandoDE extends CSVGenerator
 		
 
 		$data = [
-			'Produktname'			=> $this->elasticExportHelper->getName($item, $settings, 150),
-			'Artikelnummer'			=> $this->elasticExportHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
-			'ean'				=> $this->elasticExportHelper->getBarcodeByType($item, $settings->get('barcode')),
+			'Produktname'			=> $this->lenandoHelper->getName($item, $settings, 150),
+			'Artikelnummer'			=> $this->lenandoHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
+			'ean'				=> $this->lenandoHelper->getBarcodeByType($item, $settings->get('barcode')),
 			'Hersteller'			=> $item->itemBase->producer,
 			'Steuersatz'			=> $vat,
 			'Preis'				=> number_format($rrp, 2, '.', ''),
 			'Kurzbeschreibung'		=> '',
-			'Beschreibung'			=> $this->elasticExportHelper->getDescription($item, $settings, 5000),
+			'Beschreibung'			=> $this->lenandoHelper->getDescription($item, $settings, 5000),
 			'Versandkosten'			=> '',
 			'Lagerbestand'			=> $stock,
 			'Kategoriestruktur'		=> '',
 			'Attribute'			=> '',
 			'Gewicht'			=> $item->variationBase->weightG,
-			'Lieferzeit'			=> $this->elasticExportHelper->getAvailability($item, $settings, false),
+			'Lieferzeit'			=> $this->lenandoHelper->getAvailability($item, $settings, false),
 			'Nachnahmegebühr'		=> '',
 			'MPN'				=> $item->variationBase->model,
 			'Bildlink'			=> $this->getImageByNumber($item, $settings, 0),
@@ -409,8 +361,8 @@ class lenandoDE extends CSVGenerator
 		}
 		
 	
-		$rrp = $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) > $this->elasticExportHelper->getPrice($item) ? $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) : $this->elasticExportHelper->getPrice($item);
-		$price = $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) > $this->elasticExportHelper->getPrice($item) ? $this->elasticExportHelper->getPrice($item) : $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings);
+		$rrp = $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) > $this->lenandoHelper->getPrice($item) ? $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) : $this->lenandoHelper->getPrice($item);
+		$price = $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) > $this->lenandoHelper->getPrice($item) ? $this->lenandoHelper->getPrice($item) : $this->lenandoHelper->getRecommendedRetailPrice($item, $settings);
 		$price = $price > 0 ? $price : '';
 		$unit = $this->getUnit($item, $settings);
 		$basePriceContent = (int)$item->variationBase->content;
@@ -418,20 +370,20 @@ class lenandoDE extends CSVGenerator
 		
 
 		$data = [
-			'Produktname'			=> $this->elasticExportHelper->getName($item, $settings, 150),
-			'Artikelnummer'			=> $this->elasticExportHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
-			'ean'				=> $this->elasticExportHelper->getBarcodeByType($item, $settings->get('barcode')),
+			'Produktname'			=> $this->lenandoHelper->getName($item, $settings, 150),
+			'Artikelnummer'			=> $this->lenandoHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
+			'ean'				=> $this->lenandoHelper->getBarcodeByType($item, $settings->get('barcode')),
 			'Hersteller'			=> $item->itemBase->producer,
 			'Steuersatz'			=> $vat,
 			'Preis'				=> number_format($rrp, 2, '.', ''),
 			'Kurzbeschreibung'		=> '',
-			'Beschreibung'			=> $this->elasticExportHelper->getDescription($item, $settings, 5000),
+			'Beschreibung'			=> $this->lenandoHelper->getDescription($item, $settings, 5000),
 			'Versandkosten'			=> '',
 			'Lagerbestand'			=> $stock,
 			'Kategoriestruktur'		=> '',
 			'Attribute'			=> '',
 			'Gewicht'			=> $item->variationBase->weightG,
-			'Lieferzeit'			=> $this->elasticExportHelper->getAvailability($item, $settings, false),
+			'Lieferzeit'			=> $this->lenandoHelper->getAvailability($item, $settings, false),
 			'Nachnahmegebühr'		=> '',
 			'MPN'				=> $item->variationBase->model,
 			'Bildlink'			=> $this->getImageByNumber($item, $settings, 0),
@@ -546,28 +498,28 @@ class lenandoDE extends CSVGenerator
 		
 		
 
-		$rrp = $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) > $this->elasticExportHelper->getPrice($item) ? $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) : $this->elasticExportHelper->getPrice($item);
-		$price = $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings) > $this->elasticExportHelper->getPrice($item) ? $this->elasticExportHelper->getPrice($item) : $this->elasticExportHelper->getRecommendedRetailPrice($item, $settings);
+		$rrp = $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) > $this->lenandoHelper->getPrice($item) ? $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) : $this->lenandoHelper->getPrice($item);
+		$price = $this->lenandoHelper->getRecommendedRetailPrice($item, $settings) > $this->lenandoHelper->getPrice($item) ? $this->lenandoHelper->getPrice($item) : $this->lenandoHelper->getRecommendedRetailPrice($item, $settings);
 		$price = $price > 0 ? $price : '';
 
 		$unit = $this->getUnit($item, $settings);
 		$basePriceContent = (int)$item->variationBase->content;
 
 		$data = [
-			'Produktname'			=> $this->elasticExportHelper->getName($item, $settings, 150),
-			'Artikelnummer'			=> $this->elasticExportHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
-			'ean'				=> $this->elasticExportHelper->getBarcodeByType($item, $settings->get('barcode')),
+			'Produktname'			=> $this->lenandoHelper->getName($item, $settings, 150),
+			'Artikelnummer'			=> $this->lenandoHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
+			'ean'				=> $this->lenandoHelper->getBarcodeByType($item, $settings->get('barcode')),
 			'Hersteller'			=> $item->itemBase->producer,
 			'Steuersatz'			=> $vat,
 			'Preis'				=> number_format($rrp, 2, '.', ''),
 			'Kurzbeschreibung'		=> '',
-			'Beschreibung'			=> $this->elasticExportHelper->getDescription($item, $settings, 5000),
+			'Beschreibung'			=> $this->lenandoHelper->getDescription($item, $settings, 5000),
 			'Versandkosten'			=> '',
 			'Lagerbestand'			=> $stock,
 			'Kategoriestruktur'		=> '',
 			'Attribute'			=> '',
 			'Gewicht'			=> $item->variationBase->weightG,
-			'Lieferzeit'			=> $this->elasticExportHelper->getAvailability($item, $settings, false),
+			'Lieferzeit'			=> $this->lenandoHelper->getAvailability($item, $settings, false),
 			'Nachnahmegebühr'		=> '',
 			'MPN'				=> $item->variationBase->model,
 			'Bildlink'			=> $this->getImageByNumber($item, $settings, 0),
@@ -595,7 +547,7 @@ class lenandoDE extends CSVGenerator
 			'Freifeld9'			=> $item->itemBase->free9,
 			'Freifeld10'			=> $item->itemBase->free10,
 			'baseid'			=> $item->itemBase->id,
-			'basename'			=> $this->elasticExportHelper->getAttributeName($item, $settings).':'.$attributeValue,
+			'basename'			=> $this->lenandoHelper->getAttributeName($item, $settings),
 			'level'				=> '0',
 			'status'			=> $variationAvailable,
 			'external_categories'		=> '1', //$item->variationStandardCategory->categoryId,
@@ -614,7 +566,7 @@ class lenandoDE extends CSVGenerator
 	// gibt das jeweilige Bild
 	private function getImageByNumber(Record $item, KeyValue $settings, int $number):string
 	{
-		$imageList = $this->elasticExportHelper->getImageList($item, $settings);
+		$imageList = $this->lenandoHelper->getImageList($item, $settings);
 		
 		if(count($imageList) > 0 && array_key_exists($number, $imageList))
 		{
@@ -629,7 +581,7 @@ class lenandoDE extends CSVGenerator
 	// Wandelt die Einheitsangaben um
 	private function getUnit(Record $item, KeyValue $settings):string
 	{
-		$unit = $this->elasticExportHelper->getBasePriceDetailUnit($item, $settings);
+		$unit = $this->lenandoHelper->getBasePriceDetailUnit($item, $settings);
 
 		switch($unit)
 		{
