@@ -269,7 +269,7 @@ class lenandoDE extends CSVGenerator
 
 		$data = [
 			'Produktname'			=> $this->lenandoHelper->getName($item, $settings, 150),
-			'Artikelnummer'			=> $this->lenandoHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
+			'Artikelnummer'			=> $item->itemBase->id,
 			'ean'				=> $this->lenandoHelper->getBarcodeByType($item, $settings->get('barcode')),
 			'Hersteller'			=> $item->itemBase->producer,
 			'Steuersatz'			=> $vat,
@@ -421,7 +421,7 @@ class lenandoDE extends CSVGenerator
 
 		$data = [
 			'Produktname'			=> $this->lenandoHelper->getName($item, $settings, 150),
-			'Artikelnummer'			=> $this->lenandoHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
+			'Artikelnummer'			=> $item->itemBase->id,
 			'ean'				=> $this->lenandoHelper->getBarcodeByType($item, $settings->get('barcode')),
 			'Hersteller'			=> $item->itemBase->producer,
 			'Steuersatz'			=> $vat,
@@ -557,7 +557,7 @@ class lenandoDE extends CSVGenerator
 
 		$data = [
 			'Produktname'			=> $this->lenandoHelper->getName($item, $settings, 150),
-			'Artikelnummer'			=> $this->lenandoHelper->generateSku($item, 106, (string)$item->variationMarketStatus->sku),
+			'Artikelnummer'			=> $item->itemBase->id,
 			'ean'				=> $this->lenandoHelper->getBarcodeByType($item, $settings->get('barcode')),
 			'Hersteller'			=> $item->itemBase->producer,
 			'Steuersatz'			=> $vat,
