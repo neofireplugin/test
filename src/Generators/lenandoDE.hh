@@ -61,17 +61,19 @@ class lenandoDE extends CSVGenerator
 			
 	$data = [
 			'external_id'			=> '1',
-			'external_parent_id'		=> '0',
+			'external_parent_id'	=> '0',
 			'categoryname'			=> 'alle Produkte',
-			'active'			=> '1',
-			'sort'				=> '0',
-			'level'				=> '0',
+			'active'				=> '1',
+			'sort'					=> '0',
+			'level'					=> '0',
 		
 		];
 
 		$this->addCSVContent(array_values($data));
 			
-	
+		$this->addCSVContent([
+				'',
+			]);
 
 			$this->addCSVContent([
 				'Produktname',
@@ -135,7 +137,55 @@ class lenandoDE extends CSVGenerator
                 $attributeName[$item->itemBase->id] = $this->lenandoHelper->getAttributeName($item, $settings);
             }
 
-			
+			foreach($resultData as $item)
+			{
+				$currentItemId = $item->itemBase->id;
+                $attributeValue = $this->lenandoHelper->getAttributeValueSetShortFrontendName($item, $settings, '|');
+
+                /**
+                 * Case of an item with more variation
+                 */
+                if ($previousItemId != $currentItemId && $item->itemBase->variationCount > 1)
+				{
+                    /**
+                     * The item has multiple active variations with attributes
+                     */
+                    if(strlen($attributeName[$item->itemBase->id]) > 0)
+                    {
+                        $this->buildParentWithChildrenRow($item, $settings, $attributeName);
+                    }
+                    /**
+                     * The item has only inactive variations
+                     */
+                    else
+                    {
+                        $this->buildParentWithoutChildrenRow($item, $settings);
+                    }
+                    /**
+                     * This will only be triggered if the main variation also has a attribute value
+                     */
+					if(strlen($attributeValue) > 0)
+					{
+						$this->buildChildRow($item, $settings, $attributeValue);
+					}
+					$previousItemId = $currentItemId;
+				}
+                /**
+                 * Case item has only the main variation
+                 */
+				elseif($previousItemId != $currentItemId && $item->itemBase->variationCount == 1 && $item->itemBase->hasAttribute == false)
+				{
+					$this->buildParentWithoutChildrenRow($item, $settings);
+					$previousItemId = $currentItemId;
+				}
+                /**
+                 * The parent is already in the csv
+                 */
+				elseif(strlen($attributeValue) > 0)
+				{
+					$this->buildChildRow($item, $settings, $attributeValue);
+				}
+			}
 		}
 	}
 
